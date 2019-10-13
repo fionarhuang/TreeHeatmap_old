@@ -1,0 +1,26 @@
+Package: TreeHeatmap
+Type: Package
+Title: Display heatmap at different resolution level of a tree
+Version: 0.1.0
+Authors@R: person("Ruizhu", "Huang", email = "ruizhuRH@gmail.com",
+           role = c("aut", "cre"), comment = c(ORCID = "0000-0003-3285-1945"))
+Description: This is a side package to TreeSummarizedExperiment to visualize 
+    data at arbitary levels of a tree. 
+Depends: R(>= 3.6.0), TreeSummarizedExperiment
+License: GPL (>=2)
+Encoding: UTF-8
+LazyData: true
+biocViews: DataRepresentation, Infrastructure
+Imports:
+    ggtree,
+    dplyr,
+    ggplot2,
+    viridis,
+    tidyr
+VignetteBuilder: knitr
+Suggests: 
+    BiocStyle,
+    knitr,
+    rmarkdown,
+    testthat
+RoxygenNote: 6.1.1
