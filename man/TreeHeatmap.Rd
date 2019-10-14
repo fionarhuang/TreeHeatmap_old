@@ -128,6 +128,7 @@ tree_fig <- ggtree(tinyTree,
     #geom_text2(aes(label = label)) +
     geom_hilight(node = 18, fill = "orange", alpha = 0.3) +
     geom_hilight(node = 13, fill = "blue", alpha = 0.3)
+
 fig <- TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
                    hm_data = data.frame(hm_data),
                    tree_hm_gap = 0.1,

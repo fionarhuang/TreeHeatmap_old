@@ -51,7 +51,8 @@
 #' @importFrom ggtree ggtree
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate select distinct "%>%"
-#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c
+#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes
+#' @importFrom ggnewscale new_scale_color
 #' @importFrom viridis  viridis
 #' @export
 #' @author Ruizhu Huang
@@ -95,6 +96,7 @@
 #'     #geom_text2(aes(label = label)) +
 #'     geom_hilight(node = 18, fill = "orange", alpha = 0.3) +
 #'     geom_hilight(node = 13, fill = "blue", alpha = 0.3)
+#'
 #' fig <- TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
 #'                    hm_data = data.frame(hm_data),
 #'                    tree_hm_gap = 0.1,
@@ -118,6 +120,222 @@
 #' fig
 #' # use expand_limits to display the missing part of row names
 #' fig + expand_limits(x = c(0, 22))
+
+# TreeHeatmap <- function(tree, tree_fig, hm_data,
+#                         tree_hm_gap = 0,
+#                         rel_width = 1,
+#                         column_order = NULL,
+#                         column_split = NULL,
+#                         column_split_gap = 0.2,
+#                         column_anno_color = NULL,
+#                         column_anno_gap = 0.1,
+#                         legend_title_hm = "Expression",
+#                         legend_title_column_anno = "group",
+#                         show_colnames = FALSE,
+#                         colnames_position = "top",
+#                         colnames_angle = 0,
+#                         colnames_offset_x = 0,
+#                         colnames_offset_y = 0,
+#                         colnames_size = 4,
+#                         colnames_hjust = 0.5,
+#                         show_rownames = FALSE,
+#                         rownames_angle = 0,
+#                         rownames_offset_x = 0,
+#                         rownames_offset_y = 0,
+#                         rownames_size = 4,
+#                         rownames_hjust = 0.5){
+#
+#
+#     if (!is.null(column_order)) {
+#         if (!all(column_order %in% colnames(hm_data))) {
+#             stop("column_order: Some columns don't exist in hm_data.")
+#         }
+#     }
+#
+#     if (!is.null(column_split)) {
+#         if (is.null(names(column_split))) {
+#             stop("column_split: should be named by colnames of hm_data")
+#         }
+#         if (!all(names(column_split) %in% colnames(hm_data))) {
+#             stop("column_split: Some columns don't exist in hm_data.")
+#         }
+#     }
+#
+#     if (!is.null(column_anno_color)) {
+#         if (is.null(names(column_anno_color))) {
+#             stop("column_anno_color: should be named by colnames of hm_data")
+#         }
+#         if (!all(names(column_anno_color) %in% colnames(hm_data))) {
+#             stop("column_anno_color: Some columns don't exist in hm_data.")
+#         }
+#     }
+#
+#     ## tree: data
+#     df <- tree_fig$data
+#
+#     # ------------------------ heatmap -----------------------
+#     # data
+#     hm_df <- data.frame(hm_data, check.names = FALSE)
+#
+#     # heatmap: node
+#     rnam_hm <- rownames(hm_df)
+#     node_hm <- transNode(tree = tree, node = rnam_hm)
+#     hm_df$node <- node_hm
+#     hm_df$row_label <- rnam_hm
+#
+#     # heatmap: y
+#     desd_hm <- findOS(tree = tree, node = node_hm,
+#                       only.leaf = FALSE, self.include = TRUE)
+#     y_hm <- lapply(desd_hm, FUN = function(x){
+#         xx <- match(x, df$node)
+#         y <- df$y[xx]
+#         # the middle point
+#         mean(range(y, na.rm = TRUE))
+#      })
+#     hm_df$y <- unlist(y_hm)
+#
+#     # heatmap: height of a row
+#     h_hm <- lapply(desd_hm, FUN = function(x){
+#         xx <- match(x, df$node)
+#         y <- df$y[xx]
+#
+#         # the distance
+#         diff(range(y, na.rm = TRUE)) + 1
+#     })
+#     hm_df$height <- unlist(h_hm)
+#
+#     # heatmap: width of a column
+#     width_hm <- rel_width * (df$x %>%
+#                                  range(na.rm = TRUE) %>%
+#                                  diff)/ncol(hm_data)
+#     hm_df$width <- width_hm
+#
+#     # heatmap: long form
+#
+#     hm_dt <- gather(hm_df, .data$variable, .data$value,
+#                     -c(.data$y, .data$node, .data$row_label,
+#                        .data$width, .data$height))
+#
+#     # heatmap: x
+#     if (!is.null(column_split)) {
+#         column_split <- factor(column_split)
+#         column_grp <- sort(column_split)
+#
+#         if (!is.null(column_order)) {
+#             warnings("column_order is ignored when column_split is given")}
+#         column_order <- names(column_grp)
+#
+#     } else {
+#         # if columns are not split, all columns in one level
+#         column_grp <- rep(0, ncol(hm_data))
+#         names(column_grp) <- colnames(hm_data)
+#         column_grp <- factor(column_grp)
+#         if (is.null(column_order)) {
+#             column_order <- colnames(hm_data)}
+#     }
+#
+#     hm_dt <- hm_dt %>%
+#         mutate(variable = factor(.data$variable, levels = column_order)) %>%
+#         mutate(column_order = as.numeric(.data$variable) -1) %>%
+#         mutate(column_grp = column_grp[.data$variable]) %>%
+#         mutate(column_grp = as.numeric(.data$column_grp) - 1) %>%
+#         mutate(x = max(df$x, na.rm = TRUE) +
+#                    tree_hm_gap + width_hm/2 +
+#                    .data$column_order  * width_hm +
+#                    .data$column_grp * column_split_gap) %>%
+#         select(.data$node, .data$row_label, .data$x, .data$y,
+#                .data$height, .data$width, .data$variable,
+#                .data$value, .data$column_order, .data$column_grp)
+#
+#     # # -------------------- tree + heatmap --------------------
+#     p <- tree_fig +
+#         geom_tile(data = hm_dt,
+#                   aes(x = .data$x, y = .data$y,
+#                       height = .data$height,
+#                       fill = .data$value,
+#                       width = .data$width),
+#                   inherit.aes = FALSE)
+#     p <- p + scale_fill_viridis_c()
+#     p
+#
+#     # # -------------------- heatmap annotation ----------------
+#     if (!is.null(column_split)) {
+#         if (is.null(column_anno_color)) {
+#             len_grp <- length(unique(column_split))
+#             col_grp <- viridis(len_grp)
+#             column_anno_color <- col_grp[column_split]
+#             names(column_anno_color) <- names(column_split)
+#         }
+#         # column annotations
+#         anno_df <- hm_dt %>%
+#             select(.data$variable, .data$x, .data$width) %>%
+#             distinct() %>%
+#             mutate(
+#                 variable = as.character(.data$variable),
+#                 x = .data$x - 0.5 * .data$width,
+#                 xend = .data$x + .data$width,
+#                 y = max(df$y, na.rm = TRUE) +
+#                     column_anno_gap,
+#                 yend = max(df$y, na.rm = TRUE) +
+#                     column_anno_gap,
+#                 anno_color = column_anno_color[.data$variable],
+#                 anno_grp = column_split[.data$variable])
+#         anno_color <- anno_df$anno_color
+#         names(anno_color) <- anno_df$anno_grp
+#         p <- p +
+#             new_scale_color()+
+#             geom_segment(data = anno_df,
+#                          aes(x = .data$x, y = .data$y,
+#                              xend = .data$xend,
+#                              yend = .data$yend,
+#                              color = .data$anno_grp),
+#                          inherit.aes = FALSE, size = 2) +
+#             scale_color_manual(values = anno_color) +
+#             labs(fill = legend_title_hm,
+#                  color = legend_title_column_anno)
+#     }
+#
+#     # # -------------------- heatmap column names ----------------
+#     if (show_colnames) {
+#         cn_df <- hm_dt %>%
+#             select(.data$variable, .data$x, .data$width) %>%
+#             distinct() %>%
+#             mutate(
+#                 variable = as.character(.data$variable),
+#                 y_top = max(hm_dt$y + 0.5 * hm_dt$height) +
+#                     column_anno_gap,
+#                 y_bottom = min(hm_dt$y - 0.5* hm_dt$height),
+#                 y = ifelse(colnames_position == "top",
+#                            .data$y_top, .data$y_bottom))
+#         p <- p + geom_text(data = cn_df,
+#                            aes(x = .data$x, y = .data$y,
+#                                label = .data$variable),
+#                            size = colnames_size, inherit.aes = FALSE,
+#                            angle = colnames_angle,
+#                            nudge_x = colnames_offset_x,
+#                            nudge_y = colnames_offset_y,
+#                            hjust = colnames_hjust)
+#     }
+#
+#     if (show_rownames) {
+#         rn_df <- hm_dt %>%
+#             select(.data$y, .data$width, .data$row_label) %>%
+#             distinct() %>%
+#             mutate(x = max(hm_dt$x + 0.5*hm_dt$width))
+#         p <- p + geom_text(data = rn_df,
+#                            aes(x = .data$x, y = .data$y,
+#                                label = .data$row_label),
+#                            size = rownames_size, inherit.aes = FALSE,
+#                            angle = rownames_angle,
+#                            nudge_x = rownames_offset_x,
+#                            nudge_y = rownames_offset_y,
+#                            hjust = rownames_hjust)
+#     }
+#
+#     return(p)
+# }
+
+
 
 TreeHeatmap <- function(tree, tree_fig, hm_data,
                         tree_hm_gap = 0,
@@ -183,12 +401,12 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
 
     # heatmap: y
     desd_hm <- findOS(tree = tree, node = node_hm,
-                      only.leaf = TRUE, self.include = TRUE)
+                      only.leaf = FALSE, self.include = TRUE)
     y_hm <- lapply(desd_hm, FUN = function(x){
         xx <- match(x, df$node)
         y <- df$y[xx]
         # the middle point
-        mean(range(y))
+        mean(range(y, na.rm = TRUE))
     })
     hm_df$y <- unlist(y_hm)
 
@@ -196,8 +414,9 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     h_hm <- lapply(desd_hm, FUN = function(x){
         xx <- match(x, df$node)
         y <- df$y[xx]
-        # the middle point
-        diff(range(y)) + 1
+
+        # the distance
+        diff(range(y, na.rm = TRUE)) + 1
     })
     hm_df$height <- unlist(h_hm)
 
@@ -208,8 +427,11 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     hm_df$width <- width_hm
 
     # heatmap: long form
+    variable <- node <- row_label <- NULL
+    value <- x <- y <- height <- width <- NULL
     hm_dt <- gather(hm_df, variable, value,
-                    -c(y, node, row_label, width, height))
+                    -c(y, node, row_label,
+                       width, height))
 
     # heatmap: x
     if (!is.null(column_split)) {
@@ -238,19 +460,22 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                    tree_hm_gap + width_hm/2 +
                    column_order  * width_hm +
                    column_grp * column_split_gap) %>%
-        select(node, row_label, x, y, height, width, variable,
+        select(node, row_label, x, y,
+               height, width, variable,
                value, column_order, column_grp)
 
-    # -------------------- tree + heatmap --------------------
+    # # -------------------- tree + heatmap --------------------
     p <- tree_fig +
         geom_tile(data = hm_dt,
-                  aes(x, y, height = height,
-                      fill = value, width = width),
+                  aes(x = x, y = y,
+                      height = height,
+                      fill = value,
+                      width = width),
                   inherit.aes = FALSE)
     p <- p + scale_fill_viridis_c()
     p
 
-    # -------------------- heatmap annotation ----------------
+    # # -------------------- heatmap annotation ----------------
     if (!is.null(column_split)) {
         if (is.null(column_anno_color)) {
             len_grp <- length(unique(column_split))
@@ -259,44 +484,53 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
             names(column_anno_color) <- names(column_split)
         }
         # column annotations
+        xend <- yend <- anno_grp <- anno_color <- NULL
         anno_df <- hm_dt %>%
             select(variable, x, width) %>%
             distinct() %>%
             mutate(
                 variable = as.character(variable),
-                x = x - 0.5*width,
+                x = x - 0.5 * width,
                 xend = x + width,
-                y = max(hm_dt$y + 0.5*hm_dt$height) +
+                y = max(df$y, na.rm = TRUE) +
                     column_anno_gap,
-                yend = max(hm_dt$y + 0.5*hm_dt$height) +
+                yend = max(df$y, na.rm = TRUE) +
                     column_anno_gap,
                 anno_color = column_anno_color[variable],
                 anno_grp = column_split[variable])
         anno_color <- anno_df$anno_color
         names(anno_color) <- anno_df$anno_grp
-        p <- p + geom_segment(data = anno_df,
-                              aes(x = x, y = y, xend = xend,
-                                  yend = yend,
-                                  color = anno_grp), size = 2) +
+
+
+        p <- p +
+            new_scale_color()+
+            geom_segment(data = anno_df,
+                         aes(x = x, y = y,
+                             xend = xend,
+                             yend = yend,
+                             color = anno_grp),
+                         inherit.aes = FALSE, size = 2) +
             scale_color_manual(values = anno_color) +
             labs(fill = legend_title_hm,
                  color = legend_title_column_anno)
     }
 
-    # -------------------- heatmap column names ----------------
+    # # -------------------- heatmap column names ----------------
     if (show_colnames) {
+        y_top <- y_bottom <- NULL
         cn_df <- hm_dt %>%
             select(variable, x, width) %>%
             distinct() %>%
             mutate(
                 variable = as.character(variable),
-                y_top = max(hm_dt$y + 0.5*hm_dt$height) +
+                y_top = max(hm_dt$y + 0.5 * hm_dt$height) +
                     column_anno_gap,
-                y_bottom = min(hm_dt$y - 0.5*hm_dt$height),
+                y_bottom = min(hm_dt$y - 0.5* hm_dt$height),
                 y = ifelse(colnames_position == "top",
                            y_top, y_bottom))
         p <- p + geom_text(data = cn_df,
-                           aes(x = x, y = y, label = variable),
+                           aes(x = x, y = y,
+                               label = variable),
                            size = colnames_size, inherit.aes = FALSE,
                            angle = colnames_angle,
                            nudge_x = colnames_offset_x,
@@ -310,7 +544,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
             distinct() %>%
             mutate(x = max(hm_dt$x + 0.5*hm_dt$width))
         p <- p + geom_text(data = rn_df,
-                           aes(x = x, y = y, label = row_label),
+                           aes(x = x, y = y,
+                               label = row_label),
                            size = rownames_size, inherit.aes = FALSE,
                            angle = rownames_angle,
                            nudge_x = rownames_offset_x,

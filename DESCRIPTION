@@ -16,7 +16,8 @@ Imports:
     dplyr,
     ggplot2,
     viridis,
-    tidyr
+    tidyr,
+    ggnewscale
 VignetteBuilder: knitr
 Suggests: 
     BiocStyle,
