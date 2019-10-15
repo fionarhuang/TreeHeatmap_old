@@ -23,5 +23,6 @@ Suggests:
     BiocStyle,
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    scales
 RoxygenNote: 6.1.1
