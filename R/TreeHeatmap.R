@@ -353,7 +353,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                       height = height,
                       fill = value,
                       width = width),
-                  inherit.aes = FALSE)
+                  inherit.aes = FALSE) +
+        labs(fill = legend_title_hm)
     p <- p + scale_fill_viridis_c()
     p
 
@@ -393,9 +394,9 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                          inherit.aes = FALSE,
                          size = column_anno_size) +
             scale_color_manual(values = anno_color) +
-            labs(fill = legend_title_hm,
-                 color = legend_title_column_anno)
+            labs(color = legend_title_column_anno)
     }
+
 
     # # -------------------- heatmap column names ----------------
     if (show_colnames) {
