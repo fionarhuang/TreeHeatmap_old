@@ -5,15 +5,20 @@
 \title{Heatmap at arbitary levels of a tree}
 \usage{
 TreeHeatmap(tree, tree_fig, hm_data, tree_hm_gap = 0, rel_width = 1,
-  column_order = NULL, column_split = NULL, column_anno = NULL,
-  column_anno_size = 1, column_split_gap = 0.2,
-  column_anno_color = NULL, column_anno_gap = 0.1,
-  legend_title_hm = "Expression", legend_title_column_anno = "group",
-  show_colnames = FALSE, colnames_position = "top",
-  colnames_angle = 0, colnames_offset_x = 0, colnames_offset_y = 0,
-  colnames_size = 4, colnames_hjust = 0.5, show_rownames = FALSE,
-  rownames_angle = 0, rownames_offset_x = 0, rownames_offset_y = 0,
-  rownames_size = 4, rownames_hjust = 0.5, show_title = FALSE,
+  cell_line_color = NA, cell_line_size = 0, column_order = NULL,
+  column_split = NULL, column_split_gap = 0.2,
+  column_split_label = NULL, split_label_fontface = "bold",
+  split_label_color = "black", split_label_size = 3,
+  split_label_angle = 0, split_label_offset_x = 0,
+  split_label_offset_y = 2, split_label_hjust = 0.5,
+  column_anno = NULL, column_anno_size = 1, column_anno_color = NULL,
+  column_anno_gap = 0.1, legend_title_hm = "Expression",
+  legend_title_column_anno = "group", show_colnames = FALSE,
+  colnames_position = "top", colnames_angle = 0,
+  colnames_offset_x = 0, colnames_offset_y = 0, colnames_size = 4,
+  colnames_hjust = 0.5, show_rownames = FALSE, rownames_angle = 0,
+  rownames_offset_x = 0, rownames_offset_y = 0, rownames_size = 4,
+  rownames_hjust = 0.5, rownames_label = NULL, show_title = FALSE,
   title_hm = "First heatmap", title_fontface = "bold",
   title_color = "black", title_size = 3, title_angle = 0,
   title_offset_x = 0, title_offset_y = 2, title_hjust = 0.5,
@@ -35,6 +40,12 @@ the heatmap.}
 the width of the tree. For example, \code{rel_width = 1}, the width of
 heatmap is the same as the width of the tree.}
 
+\item{cell_line_color}{A color for the lines among cells of the heatmap. The
+default is NA.}
+
+\item{cell_line_size}{A value to specify the size of lines among cells of the heatmap. The
+default is 0.}
+
 \item{column_order}{A character vector that includes the column name of
 \strong{hm_data} to specify the display order of the heatmap. It's ignored
 when \strong{column_split} is provided.}
@@ -43,14 +54,38 @@ when \strong{column_split} is provided.}
 about columns to split the heatmap. It's named by the colnames of
 \strong{hm_data}.}
 
+\item{column_split_gap}{A numeric value to specify the gap between the
+columns of heatmap that are split.}
+
+\item{column_split_label}{A named character vector to label the column split.
+It's named by the value or level of the \strong{column_split}.}
+
+\item{split_label_fontface}{The fontface of the labels of the column split.
+The default is "bold".}
+
+\item{split_label_color}{The color of the the labels of the column split.
+The default is "black".}
+
+\item{split_label_size}{The size of the the labels of the column split. The
+default is 3.}
+
+\item{split_label_angle}{The angle of the the labels of the column split. The
+default is 0.}
+
+\item{split_label_offset_x}{A numeric value to shift the labels of the column
+split along x-axis. The defaut is 0.}
+
+\item{split_label_offset_y}{A numeric value to shift the labels of the column
+split along y-axis. The defaut is 2.}
+
+\item{split_label_hjust}{The hjust for the labels of the column split: 0
+(left aligned); 0.5 (centered); 1 (right aligned). The default is 0.5}
+
 \item{column_anno}{A named vector to specify labels that are used to
 annotate columns of heatmap.}
 
 \item{column_anno_size}{A numeric value to specify the size of the annotation
 bar}
-
-\item{column_split_gap}{A numeric value to specify the gap between the
-columns of heatmap that are split.}
 
 \item{column_anno_color}{A named vector to specify colors that are used to
 annotate columns of heatmap.}
@@ -95,6 +130,8 @@ defaut is 0.}
 
 \item{rownames_hjust}{The hjust for row names: 0 (left aligned); 0.5
 (centered); 1 (right aligned).}
+
+\item{rownames_label}{A named vector to annotate the rows of heatmap instead the row names of \strong{hm_data}.}
 
 \item{show_title}{A logical value to specify whether the title should
 be displayed. The default is FALSE.}
