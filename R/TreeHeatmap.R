@@ -12,14 +12,34 @@
 #' @param rel_width A numeric value to specify the width of heatmap relative to
 #'   the width of the tree. For example, \code{rel_width = 1}, the width of
 #'   heatmap is the same as the width of the tree.
+#' @param cell_line_color A color for the lines among cells of the heatmap. The
+#'   default is NA.
+#' @param cell_line_size A value to specify the size of lines among cells of the heatmap. The
+#'   default is 0.
 #' @param column_order A character vector that includes the column name of
 #'   \strong{hm_data} to specify the display order of the heatmap. It's ignored
 #'   when \strong{column_split} is provided.
 #' @param column_split A named character vector that gives the group information
 #'   about columns to split the heatmap. It's named by the colnames of
 #'   \strong{hm_data}.
+#' @param column_split_label A named character vector to label the column split.
+#'   It's named by the value or level of the \strong{column_split}.
 #' @param column_split_gap A numeric value to specify the gap between the
 #'   columns of heatmap that are split.
+#' @param split_label_fontface The fontface of the labels of the column split.
+#'   The default is "bold".
+#' @param split_label_color  The color of the the labels of the column split.
+#'   The default is "black".
+#' @param split_label_size The size of the the labels of the column split. The
+#'   default is 3.
+#' @param split_label_angle The angle of the the labels of the column split. The
+#'   default is 0.
+#' @param split_label_offset_x A numeric value to shift the labels of the column
+#'   split along x-axis. The defaut is 0.
+#' @param split_label_offset_y A numeric value to shift the labels of the column
+#'   split along y-axis. The defaut is 2.
+#' @param split_label_hjust The hjust for the labels of the column split: 0
+#'   (left aligned); 0.5 (centered); 1 (right aligned). The default is 0.5
 #' @param column_anno A named vector to specify labels that are used to
 #'   annotate columns of heatmap.
 #' @param column_anno_size A numeric value to specify the size of the annotation
@@ -43,6 +63,7 @@
 #'   (centered); 1 (right aligned).
 #' @param show_rownames A logical value to specify whether row names should
 #'   be displayed. The default is FALSE.
+#' @param rownames_label A named vector to annotate the rows of heatmap instead the row names of \strong{hm_data}.
 #' @param rownames_angle A numeric value. The angle of row names.
 #' @param rownames_offset_x A numeric value to shift row names on x-axis. The
 #'   defaut is 0.
@@ -70,7 +91,7 @@
 #' @importFrom TreeSummarizedExperiment transNode findOS
 #' @importFrom ggtree ggtree
 #' @importFrom tidyr gather
-#' @importFrom dplyr mutate select distinct "%>%"
+#' @importFrom dplyr mutate select distinct "%>%" group_by summarise arrange
 #' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes
 #' @importFrom ggnewscale new_scale_color
 #' @importFrom viridis viridis
@@ -173,11 +194,21 @@
 TreeHeatmap <- function(tree, tree_fig, hm_data,
                         tree_hm_gap = 0,
                         rel_width = 1,
+                        cell_line_color = NA,
+                        cell_line_size = 0,
                         column_order = NULL,
                         column_split = NULL,
+                        column_split_gap = 0.2,
+                        column_split_label = NULL,
+                        split_label_fontface = "bold",
+                        split_label_color = "black",
+                        split_label_size = 3,
+                        split_label_angle = 0,
+                        split_label_offset_x = 0,
+                        split_label_offset_y = 2,
+                        split_label_hjust = 0.5,
                         column_anno = NULL,
                         column_anno_size = 1,
-                        column_split_gap = 0.2,
                         column_anno_color = NULL,
                         column_anno_gap = 0.1,
                         legend_title_hm = "Expression",
@@ -195,6 +226,7 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                         rownames_offset_y = 0,
                         rownames_size = 4,
                         rownames_hjust = 0.5,
+                        rownames_label = NULL,
                         show_title = FALSE,
                         title_hm = "First heatmap",
                         title_fontface = "bold",
@@ -229,6 +261,11 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
 
     }
 
+    if (!is.null(rownames_label)) {
+        if (!all(names(rownames_label) %in% rownames(hm_data))) {
+            stop("rownames_label should named with the row names of hm_data")
+        }
+    }
     ## tree: data
 
     df <- tree_fig$data
@@ -241,7 +278,14 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     rnam_hm <- rownames(hm_df)
     node_hm <- transNode(tree = tree, node = rnam_hm)
     hm_df$node <- node_hm
-    hm_df$row_label <- rnam_hm
+
+    # heatmap: the row labels
+    if (is.null(rownames_label)) {
+        rownames_label <- rnam_hm
+    } else {
+        rownames_label <- rownames_label[rnam_hm]
+    }
+    hm_df$row_label <- rownames_label
 
     # heatmap: y
     desd_hm <- findOS(tree = tree, node = node_hm,
@@ -262,6 +306,9 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
         cy <- colnames(df)
         if ("scale" %in% cy) {
             dt <- unique(df$scale[xx])
+            if (length(dt) > 1) {
+                dt <- setdiff(dt, 1)
+            }
         } else {
             dt <- 1
         }
@@ -353,6 +400,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                       height = height,
                       fill = value,
                       width = width),
+                  color = cell_line_color,
+                  size = cell_line_size,
                   inherit.aes = FALSE) +
         labs(fill = legend_title_hm)
     p <- p + scale_fill_viridis_c()
@@ -398,7 +447,7 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     }
 
 
-    # # -------------------- heatmap column names ----------------
+    # # -------------------- heatmap column & row names ----------------
     if (show_colnames) {
         y_top <- y_bottom <- NULL
         cn_df <- hm_dt %>%
@@ -436,7 +485,7 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                            hjust = rownames_hjust)
     }
 
-    # # -------------------- heatmap title ----------------
+    # -------------------- heatmap title ----------------
     if (show_title) {
         label <- NULL
         title_df <- data.frame(x = mean(range(hm_dt$x, na.rm = TRUE)),
@@ -454,5 +503,34 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                            nudge_y = title_offset_y,
                            hjust = title_hjust)
     }
+
+    # -------------------- split title  ----------------
+    if (!is.null(column_split_label)) {
+        split_label <- NULL
+        split_df <- hm_dt %>%
+            select(x, y, split_level) %>%
+            group_by(split_level) %>%
+            summarise(x = mean(range(x, na.rm = TRUE)),
+                      y = max(range(y, na.rm = TRUE))) %>%
+            arrange(split_level) %>%
+            mutate(column_split = levels(column_split),
+                   split_label = column_split_label[as.character(column_split)])
+
+        p <- p + geom_text(data = split_df,
+                           aes(x = x, y = y,
+                               label = split_label),
+                           inherit.aes = FALSE,
+                           fontface = split_label_fontface,
+                           colour = split_label_color,
+                           size = split_label_size,
+                           angle = split_label_angle,
+                           nudge_x = split_label_offset_x,
+                           nudge_y = split_label_offset_y,
+                           hjust = split_label_hjust)
+
+    }
+
+
+
     return(p)
 }
