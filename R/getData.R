@@ -13,9 +13,8 @@
 #' library(TreeSummarizedExperiment)
 #' library(ggtree)
 #' library(ggplot2)
-#' library(scales)
+#' library(ggnewscale)
 #' library(viridis)
-#' library(cowplot)
 #' library(dplyr)
 #'
 #' data(tinyTree)
@@ -70,50 +69,28 @@
 #'
 #' # generate data to do column annotation
 #' set.seed(1)
-#' ann <- matrix(sample(LETTERS[1:2], size = 3 * ncol(df_hm), replace = TRUE),
+#' ann <- matrix(sample(LETTERS[1:2], size = 3 * ncol(df_hm),
+#'                      replace = TRUE),
 #'               nrow = 3)
 #' rownames(ann) <- paste0("g", 1:3)
 #' colnames(ann) <- ct$variable
-#' ann <- data.frame(ann)
-#' ann$y <- seq_len(nrow(ann))
-#' df_ann <- tidyr::gather(ann, variable, value, -c(y)) %>%
+#' ann <- data.frame(ann) %>%
+#'        mutate(y = min(df_hm$y) - seq_len(nrow(ann)),
+#'        label = rownames(ann))
+#' df_ann <- tidyr::gather(ann, variable, value, -c(y, label)) %>%
 #'     left_join(ct)
 #'
-#'
-#' fig_main <- ggplot(df_hm) +
-#'     geom_tile(aes(x, y, width = width,
-#'                   height = height, fill = value)) +
-#'     scale_fill_viridis_c() +
-#'     theme_void() +
-#'     theme(plot.margin = unit(c(- 0.5, 0, 0, 0), "cm"))
-#' fig_anno <- ggplot(df_ann) +
-#'     geom_tile(aes(x, y, width = width, fill = value)) +
-#'     scale_fill_viridis_d(guide = "legend") +
-#'     theme_void() +
-#'     theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))
-#' legend_share <- plot_grid(get_legend(fig_main),
-#'                           get_legend(fig_anno),
-#'                           ncol = 2)
-#'
-#' # (tree_fig | main + ylim2(tree_fig))/(legend_share | anno_c + xlim2(main)) +
-#' #     plot_layout(heights = c(1, 0.2))
-#'
-#' h1 <- plot_grid(tree_fig,
-#'                 fig_main + ylim2(tree_fig) + theme(legend.position = "none"),
-#'                 ncol = 2)
-#' h2 <- plot_grid(legend_share,
-#'                 fig_anno + xlim2(fig_main) + theme(legend.position = "none"),
-#'                 ncol = 2)
-#'
-#' plot_grid(h1, h2, ncol = 1, rel_heights = c(1, 0.5))
-#' (tree_fig | fig_main + ylim2(tree_fig))/
-#' (legend_share | fig_anno + xlim2(fig_main)) +
-#' plot_layout(heights = c(1, 0.2))
-#'
+#' fig +
+#'     new_scale_fill() +
+#'     geom_tile(data = df_ann, aes(x, y-0.5,
+#'                                  width = width, fill = value)) +
+#'     scale_fill_viridis_d() +
+#'     geom_text(data = df_ann, aes(x = min(x) - 1, y = y - 0.5,
+#'                 label = label))
 
 
 getData <- function(tree_hm, type = c("heatmap", "row_name", "column_name",
-                                      "title", "column_anno", "column_order") ) {
+                                      "title", "column_anno", "column_order")) {
     type <- match.arg(type)
     if (type == "heatmap") {
         out <- tree_hm$temp_data$hm_data

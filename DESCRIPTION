@@ -24,5 +24,6 @@ Suggests:
     knitr,
     rmarkdown,
     testthat,
-    scales
-RoxygenNote: 6.1.1
+    scales,
+    cowplot
+RoxygenNote: 7.0.0
