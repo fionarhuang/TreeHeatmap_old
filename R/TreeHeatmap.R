@@ -106,23 +106,36 @@
 #' library(scales)
 #'
 #' data(tinyTree)
-#' p1 <- c(0.1, 0.4, rep(0.1, 5))
-#' p2 <- c(0.4, 0.1, rep(0.1, 5))
+#'
+#' p1 <- c(rep(0.1/3, 3), rep(0.4/2, 2), rep(0.1, 5))
+#' p2 <- c(rep(0.4/3, 3), rep(0.1/2, 2), rep(0.1, 5))
 #' set.seed(1)
-#' ct <- cbind(rmultinom(n = 5, size = 50, prob = p1),
-#'             rmultinom(n = 5, size =50, prob = p2))
+#' ct0 <- cbind(rmultinom(n = 5, size = 50, prob = p1),
+#'              rmultinom(n = 5, size =50, prob = p2))
+#' colnames(ct0) <- paste("S", 1:10, sep = "")
+#' rownames(ct0) <- transNode(tree = tinyTree, node = 1:10)
+#' oo <- sample(1:10)
+#' ct0 <- ct0[, oo]
+#'
+#' ct <- rbind(colSums(ct0[1:3, ]),
+#'             colSums(ct0[4:5, ]),
+#'             ct0[6:10, ])
 #' colnames(ct) <- paste("S", 1:10, sep = "")
 #' rownames(ct) <- transNode(tree = tinyTree, node = c(13, 18, 6:10))
 #'
-#' oo <- sample(1:10)
-#' ct <- ct[, oo]
+#'
+#'
 #' # prepare the tree figure
 #' tree_fig <- ggtree(tinyTree,
 #'                    branch.length = "none",
-#'                    layout = "rectangular") +
+#'                    layout = "rectangular", open.angle = 100) +
 #'     #geom_text2(aes(label = label)) +
 #'     geom_hilight(node = 18, fill = "orange", alpha = 0.3) +
 #'     geom_hilight(node = 13, fill = "blue", alpha = 0.3)
+#'
+#' # figure 0
+#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig, hm_data = ct0[, oo])
+#'
 #' # figure 1
 #' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig, hm_data = ct)
 #'
@@ -444,6 +457,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                          size = column_anno_size) +
             scale_color_manual(values = anno_color) +
             labs(color = legend_title_column_anno)
+    } else {
+        anno_df <- NULL
     }
 
 
@@ -468,6 +483,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                            nudge_x = colnames_offset_x,
                            nudge_y = colnames_offset_y,
                            hjust = colnames_hjust)
+    } else {
+        cn_df <- NULL
     }
 
     if (show_rownames) {
@@ -483,6 +500,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                            nudge_x = rownames_offset_x,
                            nudge_y = rownames_offset_y,
                            hjust = rownames_hjust)
+    } else {
+        rn_df <- NULL
     }
 
     # -------------------- heatmap title ----------------
@@ -502,6 +521,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                            nudge_x = title_offset_x,
                            nudge_y = title_offset_y,
                            hjust = title_hjust)
+    } else {
+        title_df <- NULL
     }
 
     # -------------------- split title  ----------------
@@ -531,6 +552,12 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     }
 
 
-
+    p$temp_data <- list(
+        hm_data = hm_dt,
+        row_name = rn_df,
+        col_name = cn_df,
+        hm_title = title_df,
+        col_anno = anno_df,
+        column_order = column_order)
     return(p)
 }
