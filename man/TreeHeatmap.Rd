@@ -4,25 +4,58 @@
 \alias{TreeHeatmap}
 \title{Heatmap at arbitary levels of a tree}
 \usage{
-TreeHeatmap(tree, tree_fig, hm_data, tree_hm_gap = 0, rel_width = 1,
-  cell_line_color = NA, cell_line_size = 0, column_order = NULL,
-  column_split = NULL, column_split_gap = 0.2,
-  column_split_label = NULL, split_label_fontface = "bold",
-  split_label_color = "black", split_label_size = 3,
-  split_label_angle = 0, split_label_offset_x = 0,
-  split_label_offset_y = 2, split_label_hjust = 0.5,
-  column_anno = NULL, column_anno_size = 1, column_anno_color = NULL,
-  column_anno_gap = 0.1, legend_title_hm = "Expression",
-  legend_title_column_anno = "group", show_colnames = FALSE,
-  colnames_position = "top", colnames_angle = 0,
-  colnames_offset_x = 0, colnames_offset_y = 0, colnames_size = 4,
-  colnames_hjust = 0.5, show_rownames = FALSE, rownames_angle = 0,
-  rownames_offset_x = 0, rownames_offset_y = 0, rownames_size = 4,
-  rownames_hjust = 0.5, rownames_label = NULL, show_title = FALSE,
-  title_hm = "First heatmap", title_fontface = "bold",
-  title_color = "black", title_size = 3, title_angle = 0,
-  title_offset_x = 0, title_offset_y = 2, title_hjust = 0.5,
-  cluster_column = FALSE)
+TreeHeatmap(
+  tree,
+  tree_fig,
+  hm_data,
+  tree_hm_gap = 0,
+  rel_width = 1,
+  cell_line_color = NA,
+  cell_line_size = 0,
+  column_order = NULL,
+  column_split = NULL,
+  column_split_gap = 0.2,
+  column_split_label = NULL,
+  split_label_fontface = "bold",
+  split_label_color = "black",
+  split_label_size = 3,
+  split_label_angle = 0,
+  split_label_offset_x = 0,
+  split_label_offset_y = 2,
+  split_label_hjust = 0.5,
+  column_anno = NULL,
+  column_anno_size = 1,
+  column_anno_color = NULL,
+  column_anno_gap = 0.1,
+  legend_title_hm = "Expression",
+  legend_title_column_anno = "group",
+  show_colnames = FALSE,
+  colnames_position = "top",
+  colnames_angle = 0,
+  colnames_offset_x = 0,
+  colnames_offset_y = 0,
+  colnames_size = 4,
+  colnames_hjust = 0.5,
+  show_rownames = FALSE,
+  rownames_angle = 0,
+  rownames_offset_x = 0,
+  rownames_offset_y = 0,
+  rownames_size = 4,
+  rownames_hjust = 0.5,
+  rownames_label = NULL,
+  show_title = FALSE,
+  title_hm = "First heatmap",
+  title_fontface = "bold",
+  title_color = "black",
+  title_size = 3,
+  title_angle = 0,
+  title_offset_x = 0,
+  title_offset_y = 2,
+  title_hjust = 0.5,
+  cluster_column = FALSE,
+  dist_method = "euclidean",
+  hclust_method = "ave"
+)
 }
 \arguments{
 \item{tree}{A phylo object}
@@ -158,6 +191,12 @@ defaut is 2.}
 \item{cluster_column}{A logical value, TRUE or FALSE. It specifies whether
 columns of the heatmap should be ordered by similarity. The default is
 TRUE. This is ignored when \strong{column_order} is given.}
+
+\item{dist_method}{See \strong{method} in \code{\link[stats]{dist}}. The
+distance method used in clustering columns. The default is "euclidean".}
+
+\item{hclust_method}{See \strong{method} in \code{\link[stats]{hclust}}. The
+clustering method used in clustering columns. The default is "ave".}
 }
 \description{
 \code{TreeHeatmap} displays a heatmap at a arbitary level of a tree.

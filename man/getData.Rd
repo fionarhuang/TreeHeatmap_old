@@ -4,8 +4,10 @@
 \alias{getData}
 \title{extract data used in the figure}
 \usage{
-getData(tree_hm, type = c("heatmap", "row_name", "column_name", "title",
-  "column_anno", "column_order"))
+getData(
+  tree_hm,
+  type = c("heatmap", "row_name", "column_name", "title", "column_anno", "column_order")
+)
 }
 \arguments{
 \item{tree_hm}{the output of \code{\link{TreeHeatmap}}.}
