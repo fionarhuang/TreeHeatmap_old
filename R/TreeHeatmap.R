@@ -88,11 +88,15 @@
 #' @param cluster_column A logical value, TRUE or FALSE. It specifies whether
 #'   columns of the heatmap should be ordered by similarity. The default is
 #'   TRUE. This is ignored when \strong{column_order} is given.
+#' @param dist_method See \strong{method} in \code{\link[stats]{dist}}. The
+#'   distance method used in clustering columns. The default is "euclidean".
+#' @param hclust_method See \strong{method} in \code{\link[stats]{hclust}}. The
+#'   clustering method used in clustering columns. The default is "ave".
 #' @importFrom TreeSummarizedExperiment transNode findOS
 #' @importFrom ggtree ggtree
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate select distinct "%>%" group_by summarise arrange
-#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes
+#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes scale_fill_viridis_d
 #' @importFrom ggnewscale new_scale_color
 #' @importFrom viridis viridis
 #' @importFrom stats hclust dist
@@ -249,7 +253,9 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                         title_offset_x = 0,
                         title_offset_y = 2,
                         title_hjust = 0.5,
-                        cluster_column = FALSE){
+                        cluster_column = FALSE,
+                        dist_method = "euclidean",
+                        hclust_method = "ave"){
 
 
     if (!is.null(column_order)) {
@@ -320,7 +326,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
         if ("scale" %in% cy) {
             dt <- unique(df$scale[xx])
             if (length(dt) > 1) {
-                dt <- setdiff(dt, 1)
+                #dt <- setdiff(dt, 1)
+                dt <- max(setdiff(dt, 1), 1)
             }
         } else {
             dt <- 1
@@ -358,7 +365,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
             similar <- lapply(ind_split, FUN = function(x) {
                 if (length(x) > 2) {
                     st <- hm_data[, x, drop = FALSE]
-                    xx <- hclust(dist(t(st)), "ave")
+                    xx <- hclust(dist(t(st), method = dist_method),
+                                 method = hclust_method)
                     colnames(st)[xx$order]
                 } else { x }
             })
@@ -385,7 +393,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
         if (is.null(column_order) & !cluster_column) {
             column_order <- colnames(hm_data)}
         if (is.null(column_order) & cluster_column) {
-            hc <- hclust(dist(t(hm_data)), "ave")
+            hc <- hclust(dist(t(hm_data), method = dist_method),
+                         method = hclust_method)
             column_order <- colnames(hm_data)[hc$order]}
         if (!is.null(column_order) & cluster_column) {
             warnings("cluster_column is ignored because column_order is given")
@@ -417,8 +426,14 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                   size = cell_line_size,
                   inherit.aes = FALSE) +
         labs(fill = legend_title_hm)
-    p <- p + scale_fill_viridis_c()
-    p
+
+    if (is.numeric(hm_dt$value)) {
+        p <- p + scale_fill_viridis_c()
+    } else {
+        p <- p + scale_fill_viridis_d()
+    }
+
+
 
     # # -------------------- heatmap annotation ----------------
     if (!is.null(column_anno)) {
