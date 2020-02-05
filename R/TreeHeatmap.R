@@ -92,11 +92,13 @@
 #'   distance method used in clustering columns. The default is "euclidean".
 #' @param hclust_method See \strong{method} in \code{\link[stats]{hclust}}. The
 #'   clustering method used in clustering columns. The default is "ave".
+#' @param show_row_tree TRUE or FALSE. Default is TRUE. If FALSE, the figure
+#'   provied in \code{tree_fig} wouldn't be shown.
 #' @importFrom TreeSummarizedExperiment transNode findOS
 #' @importFrom ggtree ggtree
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate select distinct "%>%" group_by summarise arrange
-#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes scale_fill_viridis_d
+#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes scale_fill_viridis_d theme_void
 #' @importFrom ggnewscale new_scale_color
 #' @importFrom viridis viridis
 #' @importFrom stats hclust dist
@@ -255,7 +257,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                         title_hjust = 0.5,
                         cluster_column = FALSE,
                         dist_method = "euclidean",
-                        hclust_method = "ave"){
+                        hclust_method = "ave",
+                        show_row_tree = TRUE){
 
 
     if (!is.null(column_order)) {
@@ -416,6 +419,10 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                value, column_order, split_level)
 
     # # -------------------- tree + heatmap --------------------
+    if (hide_row_tree) {
+        tree_fig <- ggplot() +
+            theme_void()
+    }
     p <- tree_fig +
         geom_tile(data = hm_dt,
                   aes(x = x, y = y,
@@ -426,6 +433,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                   size = cell_line_size,
                   inherit.aes = FALSE) +
         labs(fill = legend_title_hm)
+
+
 
     if (is.numeric(hm_dt$value)) {
         p <- p + scale_fill_viridis_c()

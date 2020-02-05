@@ -54,7 +54,8 @@ TreeHeatmap(
   title_hjust = 0.5,
   cluster_column = FALSE,
   dist_method = "euclidean",
-  hclust_method = "ave"
+  hclust_method = "ave",
+  show_row_tree = TRUE
 )
 }
 \arguments{
@@ -197,6 +198,9 @@ distance method used in clustering columns. The default is "euclidean".}
 
 \item{hclust_method}{See \strong{method} in \code{\link[stats]{hclust}}. The
 clustering method used in clustering columns. The default is "ave".}
+
+\item{show_row_tree}{TRUE or FALSE. Default is TRUE. If FALSE, the figure
+provied in \code{tree_fig} wouldn't be shown.}
 }
 \description{
 \code{TreeHeatmap} displays a heatmap at a arbitary level of a tree.
