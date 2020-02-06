@@ -63,6 +63,7 @@
 #'   (centered); 1 (right aligned).
 #' @param show_rownames A logical value to specify whether row names should
 #'   be displayed. The default is FALSE.
+#' @param rownames_position "right" or "left".
 #' @param rownames_label A named vector to annotate the rows of heatmap instead the row names of \strong{hm_data}.
 #' @param rownames_angle A numeric value. The angle of row names.
 #' @param rownames_offset_x A numeric value to shift row names on x-axis. The
@@ -98,7 +99,7 @@
 #' @importFrom ggtree ggtree
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate select distinct "%>%" group_by summarise arrange
-#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes scale_fill_viridis_d theme_void
+#' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes scale_fill_viridis_d theme_void ggplot
 #' @importFrom ggnewscale new_scale_color
 #' @importFrom viridis viridis
 #' @importFrom stats hclust dist
@@ -240,6 +241,7 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                         colnames_size = 4,
                         colnames_hjust = 0.5,
                         show_rownames = FALSE,
+                        rownames_position = "right",
                         rownames_angle = 0,
                         rownames_offset_x = 0,
                         rownames_offset_y = 0,
@@ -419,9 +421,11 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                value, column_order, split_level)
 
     # # -------------------- tree + heatmap --------------------
-    if (hide_row_tree) {
+    if (!show_row_tree) {
         tree_fig <- ggplot() +
             theme_void()
+        hm_dt <- hm_dt %>%
+            mutate(x = x - min(hm_dt$x))
     }
     p <- tree_fig +
         geom_tile(data = hm_dt,
@@ -512,10 +516,14 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     }
 
     if (show_rownames) {
+        x_right <- x_left <- NULL
         rn_df <- hm_dt %>%
             select(y, width, row_label) %>%
             distinct() %>%
-            mutate(x = max(hm_dt$x + 0.5*hm_dt$width))
+            mutate(x_right = max(hm_dt$x + 0.5*hm_dt$width),
+                   x_left = min(hm_dt$x - 0.5*hm_dt$width),
+                   x = ifelse(rownames_position == "right",
+                              x_right, x_left))
         p <- p + geom_text(data = rn_df,
                            aes(x = x, y = y,
                                label = row_label),
