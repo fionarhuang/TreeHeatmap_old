@@ -2,7 +2,7 @@
 #'
 #' \code{TreeHeatmap} displays a heatmap at a arbitary level of a tree.
 #'
-#' @param tree A phylo object
+# @param tree A phylo object
 #' @param tree_fig A ggtree object that outputs from
 #'   \code{\link[ggtree]{ggtree}}.
 #' @param hm_data A data frame. Data to plot heatmap. Its rownames should be
@@ -88,8 +88,10 @@
 #' @param cluster_column A logical value, TRUE or FALSE. It specifies whether
 #'   columns of the heatmap should be ordered by similarity. The default is
 #'   TRUE. This is ignored when \strong{column_order} is given.
-#' @importFrom TreeSummarizedExperiment transNode findOS
 #' @importFrom ggtree ggtree
+#' @importFrom tidytree nodelab
+#' @importFrom tidytree nodeid
+#' @importFrom tidytree offspring
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate select distinct "%>%" group_by summarise arrange
 #' @importFrom ggplot2 geom_tile geom_segment scale_color_manual labs geom_text scale_fill_viridis_c aes
@@ -100,7 +102,7 @@
 #' @author Ruizhu Huang
 #' @examples
 #'
-#' library(TreeSummarizedExperiment)
+#' library(tidytree)
 #' library(ggtree)
 #' library(ggplot2)
 #' library(scales)
@@ -113,7 +115,7 @@
 #' ct0 <- cbind(rmultinom(n = 5, size = 50, prob = p1),
 #'              rmultinom(n = 5, size =50, prob = p2))
 #' colnames(ct0) <- paste("S", 1:10, sep = "")
-#' rownames(ct0) <- transNode(tree = tinyTree, node = 1:10)
+#' rownames(ct0) <- nodelab(tinyTree, 1:10)
 #' oo <- sample(1:10)
 #' ct0 <- ct0[, oo]
 #'
@@ -121,7 +123,7 @@
 #'             colSums(ct0[4:5, ]),
 #'             ct0[6:10, ])
 #' colnames(ct) <- paste("S", 1:10, sep = "")
-#' rownames(ct) <- transNode(tree = tinyTree, node = c(13, 18, 6:10))
+#' rownames(ct) <- nodelab(tinyTree, c(13, 18, 6:10))
 #'
 #'
 #'
@@ -134,31 +136,31 @@
 #'     geom_hilight(node = 13, fill = "blue", alpha = 0.3)
 #'
 #' # figure 0
-#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig, hm_data = ct0[, oo])
+#' TreeHeatmap(tree_fig = tree_fig, hm_data = ct0[, oo])
 #'
 #' # figure 1
-#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig, hm_data = ct)
+#' TreeHeatmap(tree_fig = tree_fig, hm_data = ct)
 #'
 #' # figure 2: order column by similarity
-#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+#' TreeHeatmap(tree_fig = tree_fig,
 #'             hm_data = ct, cluster_column = TRUE)
 #'
 #'  # figure 3: split columns
 #' col_split <- ifelse(colnames(ct) %in% paste0("S", 1:5),
 #'                     "A", "B")
 #' names(col_split) <- colnames(ct)
-#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+#' TreeHeatmap(tree_fig = tree_fig,
 #'             hm_data = ct, cluster_column = TRUE,
 #'             column_split = col_split)
 #' # figure 4: annotate columns
 #' col_anno <- col_split
-#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+#' TreeHeatmap(tree_fig = tree_fig,
 #'             hm_data = ct, cluster_column = TRUE,
 #'             column_split = col_split,
 #'             column_anno = col_anno,
 #'             column_anno_gap = 0.5)
 #' # figure 5: change annotation colors
-#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+#' TreeHeatmap(tree_fig = tree_fig,
 #'             hm_data = ct, cluster_column = TRUE,
 #'             column_split = col_split,
 #'             column_anno = col_anno,
@@ -166,7 +168,7 @@
 #'             column_anno_color = c("A" = "red", "B"= "blue"))
 #'
 #' # figure 6: add colnames
-#' TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+#' TreeHeatmap(tree_fig = tree_fig,
 #'             hm_data = ct, cluster_column = TRUE,
 #'             column_split = col_split,
 #'             column_anno = col_anno,
@@ -178,7 +180,7 @@
 #'             colnames_offset_y = -0.2)
 #'
 #' # figure 7: add title
-#'  fig <- TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+#'  fig <- TreeHeatmap(tree_fig = tree_fig,
 #'             hm_data = ct, cluster_column = TRUE,
 #'             column_split = col_split,
 #'             column_anno = col_anno,
@@ -204,7 +206,7 @@
 #'                       values = scales::rescale(c(5, 8, 10)),
 #'                       guide = "colorbar", limits=c(5, 10))
 
-TreeHeatmap <- function(tree, tree_fig, hm_data,
+TreeHeatmap <- function(tree_fig, hm_data,
                         tree_hm_gap = 0,
                         rel_width = 1,
                         cell_line_color = NA,
@@ -289,7 +291,14 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
 
     # heatmap: node
     rnam_hm <- rownames(hm_df)
-    node_hm <- transNode(tree = tree, node = rnam_hm)
+    ## node_hm <- transNode(tree = tree, node = rnam_hm)
+    if(anyNA(as.numeric(rnam_hm))) {
+        ## node lab
+        node_hm <- rnam_hm
+    } else {
+        node_hm <- nodelab(df, rnam_hm)        
+    }
+
     hm_df$node <- node_hm
 
     # heatmap: the row labels
@@ -301,8 +310,11 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     hm_df$row_label <- rownames_label
 
     # heatmap: y
-    desd_hm <- findOS(tree = tree, node = node_hm,
-                      only.leaf = FALSE, self.include = TRUE)
+    ## desd_hm <- findOS(tree = tree, node = node_hm,
+    ##                   only.leaf = FALSE, self.include = TRUE)
+    desd_hm.tbl <- offspring(df, nodeid(df, node_hm), tiponly = FALSE, self_include = TRUE)
+    desd_hm = lapply(desd_hm.tbl, function(x) x$node)
+
     y_hm <- lapply(desd_hm, FUN = function(x){
         xx <- match(x, df$node)
         y <- df$y[xx]
@@ -317,7 +329,7 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
         y <- df$y[xx]
 
         cy <- colnames(df)
-        if ("scale" %in% cy) {
+        if ("scale" %in% cy) { 
             dt <- unique(df$scale[xx])
             if (length(dt) > 1) {
                 dt <- setdiff(dt, 1)

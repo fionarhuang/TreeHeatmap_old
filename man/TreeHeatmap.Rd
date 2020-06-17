@@ -4,7 +4,7 @@
 \alias{TreeHeatmap}
 \title{Heatmap at arbitary levels of a tree}
 \usage{
-TreeHeatmap(tree, tree_fig, hm_data, tree_hm_gap = 0, rel_width = 1,
+TreeHeatmap(tree_fig, hm_data, tree_hm_gap = 0, rel_width = 1,
   cell_line_color = NA, cell_line_size = 0, column_order = NULL,
   column_split = NULL, column_split_gap = 0.2,
   column_split_label = NULL, split_label_fontface = "bold",
@@ -25,8 +25,6 @@ TreeHeatmap(tree, tree_fig, hm_data, tree_hm_gap = 0, rel_width = 1,
   cluster_column = FALSE)
 }
 \arguments{
-\item{tree}{A phylo object}
-
 \item{tree_fig}{A ggtree object that outputs from
 \code{\link[ggtree]{ggtree}}.}
 
@@ -164,7 +162,7 @@ TRUE. This is ignored when \strong{column_order} is given.}
 }
 \examples{
 
-library(TreeSummarizedExperiment)
+library(tidytree)
 library(ggtree)
 library(ggplot2)
 library(scales)
@@ -177,7 +175,7 @@ set.seed(1)
 ct0 <- cbind(rmultinom(n = 5, size = 50, prob = p1),
              rmultinom(n = 5, size =50, prob = p2))
 colnames(ct0) <- paste("S", 1:10, sep = "")
-rownames(ct0) <- transNode(tree = tinyTree, node = 1:10)
+rownames(ct0) <- nodelab(tinyTree, 1:10)
 oo <- sample(1:10)
 ct0 <- ct0[, oo]
 
@@ -185,7 +183,7 @@ ct <- rbind(colSums(ct0[1:3, ]),
             colSums(ct0[4:5, ]),
             ct0[6:10, ])
 colnames(ct) <- paste("S", 1:10, sep = "")
-rownames(ct) <- transNode(tree = tinyTree, node = c(13, 18, 6:10))
+rownames(ct) <- nodelab(tinyTree, c(13, 18, 6:10))
 
 
 
@@ -198,31 +196,31 @@ tree_fig <- ggtree(tinyTree,
     geom_hilight(node = 13, fill = "blue", alpha = 0.3)
 
 # figure 0
-TreeHeatmap(tree = tinyTree, tree_fig = tree_fig, hm_data = ct0[, oo])
+TreeHeatmap(tree_fig = tree_fig, hm_data = ct0[, oo])
 
 # figure 1
-TreeHeatmap(tree = tinyTree, tree_fig = tree_fig, hm_data = ct)
+TreeHeatmap(tree_fig = tree_fig, hm_data = ct)
 
 # figure 2: order column by similarity
-TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+TreeHeatmap(tree_fig = tree_fig,
             hm_data = ct, cluster_column = TRUE)
 
  # figure 3: split columns
 col_split <- ifelse(colnames(ct) \%in\% paste0("S", 1:5),
                     "A", "B")
 names(col_split) <- colnames(ct)
-TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+TreeHeatmap(tree_fig = tree_fig,
             hm_data = ct, cluster_column = TRUE,
             column_split = col_split)
 # figure 4: annotate columns
 col_anno <- col_split
-TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+TreeHeatmap(tree_fig = tree_fig,
             hm_data = ct, cluster_column = TRUE,
             column_split = col_split,
             column_anno = col_anno,
             column_anno_gap = 0.5)
 # figure 5: change annotation colors
-TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+TreeHeatmap(tree_fig = tree_fig,
             hm_data = ct, cluster_column = TRUE,
             column_split = col_split,
             column_anno = col_anno,
@@ -230,7 +228,7 @@ TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
             column_anno_color = c("A" = "red", "B"= "blue"))
 
 # figure 6: add colnames
-TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+TreeHeatmap(tree_fig = tree_fig,
             hm_data = ct, cluster_column = TRUE,
             column_split = col_split,
             column_anno = col_anno,
@@ -242,7 +240,7 @@ TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
             colnames_offset_y = -0.2)
 
 # figure 7: add title
- fig <- TreeHeatmap(tree = tinyTree, tree_fig = tree_fig,
+ fig <- TreeHeatmap(tree_fig = tree_fig,
             hm_data = ct, cluster_column = TRUE,
             column_split = col_split,
             column_anno = col_anno,
