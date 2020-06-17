@@ -40,6 +40,7 @@
 #'   split along y-axis. The defaut is 2.
 #' @param split_label_hjust The hjust for the labels of the column split: 0
 #'   (left aligned); 0.5 (centered); 1 (right aligned). The default is 0.5
+#' @param split_label_vjust Similar to \code{split_label_hjust}, but control vertical justification.
 #' @param column_anno A named vector to specify labels that are used to
 #'   annotate columns of heatmap.
 #' @param column_anno_size A numeric value to specify the size of the annotation
@@ -227,6 +228,7 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                         split_label_offset_x = 0,
                         split_label_offset_y = 2,
                         split_label_hjust = 0.5,
+                        split_label_vjust = 0,
                         column_anno = NULL,
                         column_anno_size = 1,
                         column_anno_color = NULL,
@@ -558,17 +560,17 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     }
 
     # -------------------- split title  ----------------
+    split_label <- NULL
+    split_df <- hm_dt %>%
+        select(x, y, split_level) %>%
+        group_by(split_level) %>%
+        summarise(x = mean(range(x, na.rm = TRUE)),
+                  y = max(range(y, na.rm = TRUE))) %>%
+        arrange(split_level) %>%
+        mutate(column_split = levels(column_split))
     if (!is.null(column_split_label)) {
-        split_label <- NULL
-        split_df <- hm_dt %>%
-            select(x, y, split_level) %>%
-            group_by(split_level) %>%
-            summarise(x = mean(range(x, na.rm = TRUE)),
-                      y = max(range(y, na.rm = TRUE))) %>%
-            arrange(split_level) %>%
-            mutate(column_split = levels(column_split),
-                   split_label = column_split_label[as.character(column_split)])
-
+        split_df <- split_df %>%
+            mutate(split_label = column_split_label[as.character(column_split)])
         p <- p + geom_text(data = split_df,
                            aes(x = x, y = y,
                                label = split_label),
@@ -579,7 +581,8 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
                            angle = split_label_angle,
                            nudge_x = split_label_offset_x,
                            nudge_y = split_label_offset_y,
-                           hjust = split_label_hjust)
+                           hjust = split_label_hjust,
+                           vjust = split_label_vjust)
 
     }
 
@@ -587,9 +590,10 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     p$temp_data <- list(
         hm_data = hm_dt,
         row_name = rn_df,
-        col_name = cn_df,
+        column_name = cn_df,
         hm_title = title_df,
-        col_anno = anno_df,
-        column_order = column_order)
+        column_anno = anno_df,
+        column_order = column_order,
+        column_split = split_df)
     return(p)
 }

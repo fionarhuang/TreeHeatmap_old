@@ -90,7 +90,8 @@
 
 
 getData <- function(tree_hm, type = c("heatmap", "row_name", "column_name",
-                                      "title", "column_anno", "column_order")) {
+                                      "title", "column_anno", "column_order",
+                                      "column_split")) {
     type <- match.arg(type)
     if (type == "heatmap") {
         out <- tree_hm$temp_data$hm_data
@@ -100,7 +101,7 @@ getData <- function(tree_hm, type = c("heatmap", "row_name", "column_name",
     }
 
     if (type == "column_name") {
-        out <- tree_hm$temp_data$col_name
+        out <- tree_hm$temp_data$column_name
     }
 
     if (type == "title") {
@@ -108,12 +109,15 @@ getData <- function(tree_hm, type = c("heatmap", "row_name", "column_name",
     }
 
     if (type == "column_anno") {
-        out <- tree_hm$temp_data$col_anno
+        out <- tree_hm$temp_data$column_anno
     }
 
     if (type == "column_order") {
         out <- tree_hm$temp_data$column_order
     }
 
+    if (type == "column_split") {
+        out <- tree_hm$temp_data$column_split
+    }
     return(out)
 }

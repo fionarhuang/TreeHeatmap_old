@@ -2,7 +2,7 @@
 % Please edit documentation in R/Heatmap.R
 \name{Heatmap}
 \alias{Heatmap}
-\title{Heatmap at arbitary levels of a tree}
+\title{Generate a heatmap}
 \usage{
 Heatmap(
   hm_data,
@@ -51,6 +51,7 @@ Heatmap(
   rownames_size = 4,
   rownames_hjust = 0.5,
   rownames_label = NULL,
+  rownames_color = "black",
   show_title = FALSE,
   title_hm = "First heatmap",
   title_fontface = "bold",
@@ -201,6 +202,8 @@ defaut is 0.}
 
 \item{rownames_label}{A named vector to annotate the rows of heatmap instead the row names of \strong{hm_data}.}
 
+\item{rownames_color}{A color for row names.}
+
 \item{show_title}{A logical value to specify whether the title should
 be displayed. The default is FALSE.}
 
@@ -241,7 +244,7 @@ clustering method used in clustering columns. The default is "ave".}
 provied in \code{tree_fig} wouldn't be shown.}
 }
 \description{
-\code{TreeHeatmap} displays a heatmap at a arbitary level of a tree.
+\code{Heatmap} displays a heatmap at a arbitary level of a tree.
 }
 \examples{
 

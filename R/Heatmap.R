@@ -89,6 +89,7 @@
 #' @param rownames_size A numeric value to specify the size of row names.
 #' @param rownames_hjust The hjust for row names: 0 (left aligned); 0.5
 #'   (centered); 1 (right aligned).
+#' @param rownames_color A color for row names.
 #' @param show_title A logical value to specify whether the title should
 #'   be displayed. The default is FALSE.
 #' @param title_hm The title of heatmap
@@ -278,6 +279,7 @@ Heatmap <- function(hm_data,
                     rownames_size = 4,
                     rownames_hjust = 0.5,
                     rownames_label = NULL,
+                    rownames_color = "black",
                     show_title = FALSE,
                     title_hm = "First heatmap",
                     title_fontface = "bold",
@@ -584,6 +586,7 @@ Heatmap <- function(hm_data,
         p <- p + geom_text(data = rn_df,
                            aes(x = x, y = y,
                                label = row_label),
+                           color = rownames_color,
                            size = rownames_size, inherit.aes = FALSE,
                            angle = rownames_angle,
                            nudge_x = rownames_offset_x,
