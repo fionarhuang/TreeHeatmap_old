@@ -1,17 +1,9 @@
-#' Heatmap at arbitary levels of a tree
+#' Generate a heatmap
 #'
-#' \code{TreeHeatmap} displays a heatmap at a arbitary level of a tree.
+#' \code{Heatmap} displays a heatmap at a arbitary level of a tree.
 #'
-#' @param tree A phylo object
-#' @param tree_fig A ggtree object that outputs from
-#'   \code{\link[ggtree]{ggtree}}.
 #' @param hm_data A data frame. Data to plot heatmap. Its rownames should be
 #'   able to match to nodes of the \strong{tree}.
-#' @param tree_hm_gap A numeric value to specify the gap between the tree and
-#'   the heatmap.
-#' @param rel_width A numeric value to specify the width of heatmap relative to
-#'   the width of the tree. For example, \code{rel_width = 1}, the width of
-#'   heatmap is the same as the width of the tree.
 #' @param cell_line_color A color for the lines among cells of the heatmap. The
 #'   default is NA.
 #' @param cell_line_size A value to specify the size of lines among cells of the heatmap. The
@@ -26,21 +18,44 @@
 #'   It's named by the value or level of the \strong{column_split}.
 #' @param column_split_gap A numeric value to specify the gap between the
 #'   columns of heatmap that are split.
-#' @param split_label_fontface The fontface of the labels of the column split.
+#' @param column_split_label_fontface The fontface of the labels of the column split.
 #'   The default is "bold".
-#' @param split_label_color  The color of the the labels of the column split.
+#' @param column_split_label_color  The color of the the labels of the column split.
 #'   The default is "black".
-#' @param split_label_size The size of the the labels of the column split. The
+#' @param column_split_label_size The size of the the labels of the column split. The
 #'   default is 3.
-#' @param split_label_angle The angle of the the labels of the column split. The
+#' @param column_split_label_angle The angle of the the labels of the column split. The
 #'   default is 0.
-#' @param split_label_offset_x A numeric value to shift the labels of the column
+#' @param column_split_label_offset_x A numeric value to shift the labels of the column
 #'   split along x-axis. The defaut is 0.
-#' @param split_label_offset_y A numeric value to shift the labels of the column
+#' @param column_split_label_offset_y A numeric value to shift the labels of the column
 #'   split along y-axis. The defaut is 2.
-#' @param split_label_hjust The hjust for the labels of the column split: 0
+#' @param column_split_label_hjust The hjust for the labels of the column split: 0
 #'   (left aligned); 0.5 (centered); 1 (right aligned). The default is 0.5
-#' @param split_label_vjust Similar to \code{split_label_hjust}, but control vertical justification.
+#' @param row_order A character vector that includes the column name of
+#'   \strong{hm_data} to specify the display order of the heatmap. It's ignored
+#'   when \strong{row_split} is provided.
+#' @param row_split A named character vector that gives the group information
+#'   about columns to split the heatmap. It's named by the colnames of
+#'   \strong{hm_data}.
+#' @param row_split_label A named character vector to label the column split.
+#'   It's named by the value or level of the \strong{row_split}.
+#' @param row_split_gap A numeric value to specify the gap between the
+#'   columns of heatmap that are split.
+#' @param row_split_label_fontface The fontface of the labels of the column split.
+#'   The default is "bold".
+#' @param row_split_label_color  The color of the the labels of the column split.
+#'   The default is "black".
+#' @param row_split_label_size The size of the the labels of the column split. The
+#'   default is 3.
+#' @param row_split_label_angle The angle of the the labels of the column split. The
+#'   default is 0.
+#' @param row_split_label_offset_x A numeric value to shift the labels of the column
+#'   split along x-axis. The defaut is 0.
+#' @param row_split_label_offset_y A numeric value to shift the labels of the column
+#'   split along y-axis. The defaut is 2.
+#' @param row_split_label_hjust The hjust for the labels of the column split: 0
+#'   (left aligned); 0.5 (centered); 1 (right aligned). The default is 0.5
 #' @param column_anno A named vector to specify labels that are used to
 #'   annotate columns of heatmap.
 #' @param column_anno_size A numeric value to specify the size of the annotation
@@ -74,6 +89,7 @@
 #' @param rownames_size A numeric value to specify the size of row names.
 #' @param rownames_hjust The hjust for row names: 0 (left aligned); 0.5
 #'   (centered); 1 (right aligned).
+#' @param rownames_color A color for row names.
 #' @param show_title A logical value to specify whether the title should
 #'   be displayed. The default is FALSE.
 #' @param title_hm The title of heatmap
@@ -88,6 +104,9 @@
 #' @param title_hjust The hjust for title: 0 (left aligned); 0.5
 #'   (centered); 1 (right aligned). The default is 0.5
 #' @param cluster_column A logical value, TRUE or FALSE. It specifies whether
+#'   columns of the heatmap should be ordered by similarity. The default is
+#'   TRUE. This is ignored when \strong{column_order} is given.
+#' @param cluster_row A logical value, TRUE or FALSE. It specifies whether
 #'   columns of the heatmap should be ordered by similarity. The default is
 #'   TRUE. This is ignored when \strong{column_order} is given.
 #' @param dist_method See \strong{method} in \code{\link[stats]{dist}}. The
@@ -212,57 +231,69 @@
 #'                       values = scales::rescale(c(5, 8, 10)),
 #'                       guide = "colorbar", limits=c(5, 10))
 
-TreeHeatmap <- function(tree, tree_fig, hm_data,
-                        tree_hm_gap = 0,
-                        rel_width = 1,
-                        cell_line_color = NA,
-                        cell_line_size = 0,
-                        column_order = NULL,
-                        column_split = NULL,
-                        column_split_gap = 0.2,
-                        column_split_label = NULL,
-                        split_label_fontface = "bold",
-                        split_label_color = "black",
-                        split_label_size = 3,
-                        split_label_angle = 0,
-                        split_label_offset_x = 0,
-                        split_label_offset_y = 2,
-                        split_label_hjust = 0.5,
-                        split_label_vjust = 0,
-                        column_anno = NULL,
-                        column_anno_size = 1,
-                        column_anno_color = NULL,
-                        column_anno_gap = 0.1,
-                        legend_title_hm = "Expression",
-                        legend_title_column_anno = "group",
-                        show_colnames = FALSE,
-                        colnames_position = "top",
-                        colnames_angle = 0,
-                        colnames_offset_x = 0,
-                        colnames_offset_y = 0,
-                        colnames_size = 4,
-                        colnames_hjust = 0.5,
-                        show_rownames = FALSE,
-                        rownames_position = "right",
-                        rownames_angle = 0,
-                        rownames_offset_x = 0,
-                        rownames_offset_y = 0,
-                        rownames_size = 4,
-                        rownames_hjust = 0.5,
-                        rownames_label = NULL,
-                        show_title = FALSE,
-                        title_hm = "First heatmap",
-                        title_fontface = "bold",
-                        title_color = "black",
-                        title_size = 3,
-                        title_angle = 0,
-                        title_offset_x = 0,
-                        title_offset_y = 2,
-                        title_hjust = 0.5,
-                        cluster_column = FALSE,
-                        dist_method = "euclidean",
-                        hclust_method = "ave",
-                        show_row_tree = TRUE){
+Heatmap <- function(hm_data,
+                    cell_line_color = NA,
+                    cell_line_size = 0,
+                    column_order = NULL,
+                    column_split = NULL,
+                    column_split_gap = 0.2,
+                    column_split_label = NULL,
+                    column_split_label_fontface = "bold",
+                    column_split_label_color = "black",
+                    column_split_label_size = 3,
+                    column_split_label_angle = 0,
+                    column_split_label_offset_x = 0,
+                    column_split_label_offset_y = 2,
+                    column_split_label_hjust = 0.5,
+
+                    row_order = NULL,
+                    row_split = NULL,
+                    row_split_gap = 0.2,
+                    row_split_label = NULL,
+                    row_split_label_fontface = "bold",
+                    row_split_label_color = "black",
+                    row_split_label_size = 3,
+                    row_split_label_angle = 0,
+                    row_split_label_offset_x = 0,
+                    row_split_label_offset_y = 2,
+                    row_split_label_hjust = 0.5,
+
+                    column_anno = NULL,
+                    column_anno_size = 1,
+                    column_anno_color = NULL,
+                    column_anno_gap = 0.1,
+                    legend_title_hm = "Expression",
+                    legend_title_column_anno = "group",
+                    show_colnames = FALSE,
+                    colnames_position = "top",
+                    colnames_angle = 0,
+                    colnames_offset_x = 0,
+                    colnames_offset_y = 0,
+                    colnames_size = 4,
+                    colnames_hjust = 0.5,
+                    show_rownames = FALSE,
+                    rownames_position = "right",
+                    rownames_angle = 0,
+                    rownames_offset_x = 0,
+                    rownames_offset_y = 0,
+                    rownames_size = 4,
+                    rownames_hjust = 0.5,
+                    rownames_label = NULL,
+                    rownames_color = "black",
+                    show_title = FALSE,
+                    title_hm = "First heatmap",
+                    title_fontface = "bold",
+                    title_color = "black",
+                    title_size = 3,
+                    title_angle = 0,
+                    title_offset_x = 0,
+                    title_offset_y = 2,
+                    title_hjust = 0.5,
+                    cluster_column = TRUE,
+                    cluster_row = TRUE,
+                    dist_method = "euclidean",
+                    hclust_method = "ave",
+                    show_row_tree = TRUE){
 
 
     if (!is.null(column_order)) {
@@ -292,20 +323,17 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
             stop("rownames_label should named with the row names of hm_data")
         }
     }
+
     ## tree: data
 
-    df <- tree_fig$data
+    #df <- tree_fig$data
 
     # ------------------------ heatmap -----------------------
     # data
     hm_df <- data.frame(hm_data, check.names = FALSE)
 
-    # heatmap: node
-    rnam_hm <- rownames(hm_df)
-    node_hm <- transNode(tree = tree, node = rnam_hm)
-    hm_df$node <- node_hm
-
     # heatmap: the row labels
+    rnam_hm <- rownames(hm_df)
     if (is.null(rownames_label)) {
         rownames_label <- rnam_hm
     } else {
@@ -313,50 +341,22 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     }
     hm_df$row_label <- rownames_label
 
-    # heatmap: y
-    desd_hm <- findOS(tree = tree, node = node_hm,
-                      only.leaf = FALSE, self.include = TRUE)
-    y_hm <- lapply(desd_hm, FUN = function(x){
-        xx <- match(x, df$node)
-        y <- df$y[xx]
-        # the middle point
-        mean(range(y, na.rm = TRUE))
-    })
-    hm_df$y <- unlist(y_hm)
-
-    # heatmap: height of a row
-    h_hm <- lapply(desd_hm, FUN = function(x){
-        xx <- match(x, df$node)
-        y <- df$y[xx]
-
-        cy <- colnames(df)
-        if ("scale" %in% cy) {
-            dt <- unique(df$scale[xx])
-            if (length(dt) > 1) {
-                #dt <- setdiff(dt, 1)
-                dt <- max(setdiff(dt, 1), 1)
-            }
-        } else {
-            dt <- 1
-        }
-        # the distance
-        diff(range(y, na.rm = TRUE)) + dt
-    })
-    hm_df$height <- unlist(h_hm)
+    # heatmap: height
+    height_hm <- 1
+    hm_df$height <- height_hm
 
     # heatmap: width of a column
-    width_hm <- rel_width * (df$x %>%
-                                 range(na.rm = TRUE) %>%
-                                 diff)/ncol(hm_data)
-    hm_df$width <- width_hm
+    width_hm <- 1
+    hm_df$width <-  width_hm
 
     # heatmap: long form
-    variable <- node <- row_label <- NULL
+    variable <- row_label <- NULL
     value <- x <- y <- height <- width <- NULL
     hm_dt <- gather(hm_df, variable, value,
-                    -c(y, node, row_label,
+                    -c( row_label,
                        width, height))
 
+    #-------------------------- column arrangement----------------------------
     # heatmap: column order
     if (!is.null(column_split)) {
         # 1. column_split is given, ignore column order. The order within the
@@ -380,11 +380,11 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
             similar_order <- unlist(similar)
             column_split <- column_split[similar_order]
         }
-        split_level <- sort(column_split)
+        column_split_level <- sort(column_split)
 
         if (!is.null(column_order)) {
             warnings("column_order is ignored when column_split is given")}
-        column_order <- names(split_level)
+        column_order <- names(column_split_level)
     } else {
         ## column_split isn't given
         # 1. column_order is given, use column_order and ignore column
@@ -394,9 +394,9 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
         # 3. column_order isn't given and cluter columns is not allowed, use the
         #    original column order.
 
-        split_level <- rep(0, ncol(hm_data))
-        names(split_level) <- colnames(hm_data)
-        split_level <- factor(split_level)
+        column_split_level <- rep(0, ncol(hm_data))
+        names(column_split_level) <- colnames(hm_data)
+        column_split_level <- factor(column_split_level)
         if (is.null(column_order) & !cluster_column) {
             column_order <- colnames(hm_data)}
         if (is.null(column_order) & cluster_column) {
@@ -408,28 +408,85 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
         }
     }
 
-    # heatmap: x
+
+
+    #-------------------------- row arrangement ----------------------------
+    # heatmap: column order
+    if (!is.null(row_split)) {
+        # 1. column_split is given, ignore column order. The order within the
+        #    same slice is determined by the input order of column split
+        # 2. column_split is given and column_cluster = TRUE, the order within
+        #    the same slice is determined by the column similarity
+        row_split <- factor(row_split, levels = unique(row_split))
+        if (cluster_row) {
+            # column similarity within the same slice
+            ind_split <- lapply(levels(row_split), FUN = function(x){
+                names(row_split)[row_split == x]
+            })
+            similar <- lapply(ind_split, FUN = function(x) {
+                if (length(x) > 2) {
+                    st <- hm_data[, x, drop = FALSE]
+                    xx <- hclust(dist(st, method = dist_method),
+                                 method = hclust_method)
+                    rownames(st)[xx$order]
+                } else { x }
+            })
+            similar_order <- unlist(similar)
+            row_split <- row_split[similar_order]
+        }
+        row_split_level <- sort(row_split)
+
+        if (!is.null(row_order)) {
+            warnings("row_order is ignored when row_split is given")}
+        row_order <- names(row_split_level)
+    } else {
+        ## row_split isn't given
+        # 1. row_order is given, use row_order and ignore row
+        #    similarity.
+        # 2. row_order isn't given but allow cluster rows, order rows
+        #    by similarity
+        # 3. row_order isn't given and cluter rows is not allowed, use the
+        #    original row order.
+
+        row_split_level <- rep(0, nrow(hm_data))
+        names(row_split_level) <- rownames(hm_data)
+        row_split_level <- factor(row_split_level)
+        if (!is.null(row_order) & cluster_row) {
+            warnings("cluster_row is ignored because row_order is given")
+        }
+        if (is.null(row_order) & !cluster_row) {
+            row_order <- rownames(hm_data)}
+        if (is.null(row_order) & cluster_row) {
+            hc <- hclust(dist(hm_data, method = dist_method),
+                         method = hclust_method)
+            row_order <- rownames(hm_data)[hc$order]}
+
+    }
+
+    # heatmap: x, y
     hm_dt <- hm_dt %>%
         mutate(variable = factor(variable, levels = column_order)) %>%
         mutate(column_order = as.numeric(variable) -1) %>%
-        mutate(split_level = split_level[variable]) %>%
-        mutate(split_level = as.numeric(split_level) - 1) %>%
-        mutate(x = max(df$x, na.rm = TRUE) +
-                   tree_hm_gap + width_hm/2 +
+        mutate(column_split_level = column_split_level[variable]) %>%
+        mutate(column_split_level = as.numeric(column_split_level) - 1) %>%
+        mutate(x = width_hm/2 +
                    column_order  * width_hm +
-                   split_level * column_split_gap) %>%
-        select(node, row_label, x, y,
+                   column_split_level * column_split_gap) %>%
+        mutate(row_label = factor(row_label, levels = row_order)) %>%
+        mutate(row_order = as.numeric(row_label) -1) %>%
+        mutate(row_split_level = row_split_level[row_label]) %>%
+        mutate(row_split_level = as.numeric(row_split_level) - 1) %>%
+        mutate(y = height_hm/2 +
+                   row_order  * height_hm +
+                   row_split_level * row_split_gap) %>%
+        select(row_label, x, y,
                height, width, variable,
-               value, column_order, split_level)
+               value, column_order, column_split_level)
 
-    # # -------------------- tree + heatmap --------------------
-    if (!show_row_tree) {
-        tree_fig <- ggplot() +
-            theme_void()
-        hm_dt <- hm_dt %>%
-            mutate(x = x - min(hm_dt$x))
-    }
-    p <- tree_fig +
+    # -------------------- tree + heatmap --------------------
+
+    p <- ggplot() +
+        theme_void() +
         geom_tile(data = hm_dt,
                   aes(x = x, y = y,
                       height = height,
@@ -529,6 +586,7 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
         p <- p + geom_text(data = rn_df,
                            aes(x = x, y = y,
                                label = row_label),
+                           color = rownames_color,
                            size = rownames_size, inherit.aes = FALSE,
                            angle = rownames_angle,
                            nudge_x = rownames_offset_x,
@@ -560,29 +618,28 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     }
 
     # -------------------- split title  ----------------
-    split_label <- NULL
-    split_df <- hm_dt %>%
-        select(x, y, split_level) %>%
-        group_by(split_level) %>%
-        summarise(x = mean(range(x, na.rm = TRUE)),
-                  y = max(range(y, na.rm = TRUE))) %>%
-        arrange(split_level) %>%
-        mutate(column_split = levels(column_split))
     if (!is.null(column_split_label)) {
-        split_df <- split_df %>%
-            mutate(split_label = column_split_label[as.character(column_split)])
+
+        split_df <- hm_dt %>%
+            select(x, y, column_split_level) %>%
+            group_by(column_split_level) %>%
+            summarise(x = mean(range(x, na.rm = TRUE)),
+                      y = max(range(y, na.rm = TRUE))) %>%
+            arrange(column_split_level) %>%
+            mutate(column_split = levels(column_split),
+                   column_split_label = column_split_label[as.character(column_split)])
+
         p <- p + geom_text(data = split_df,
                            aes(x = x, y = y,
-                               label = split_label),
+                               label = column_split_label),
                            inherit.aes = FALSE,
-                           fontface = split_label_fontface,
-                           colour = split_label_color,
-                           size = split_label_size,
-                           angle = split_label_angle,
-                           nudge_x = split_label_offset_x,
-                           nudge_y = split_label_offset_y,
-                           hjust = split_label_hjust,
-                           vjust = split_label_vjust)
+                           fontface = column_split_label_fontface,
+                           colour = column_split_label_color,
+                           size = column_split_label_size,
+                           angle = column_split_label_angle,
+                           nudge_x = column_split_label_offset_x,
+                           nudge_y = column_split_label_offset_y,
+                           hjust = column_split_label_hjust)
 
     }
 
@@ -590,10 +647,9 @@ TreeHeatmap <- function(tree, tree_fig, hm_data,
     p$temp_data <- list(
         hm_data = hm_dt,
         row_name = rn_df,
-        column_name = cn_df,
+        col_name = cn_df,
         hm_title = title_df,
-        column_anno = anno_df,
-        column_order = column_order,
-        column_split = split_df)
+        col_anno = anno_df,
+        column_order = column_order)
     return(p)
 }
